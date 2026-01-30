@@ -15,14 +15,14 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -a -installsuffix cgo \
     -ldflags="-X main.version=$VERSION" \
-    -o terse ./cmd/terse
+    -o /app/terse ./cmd/terse
 
 # Final stage
 FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates
 
-WORKDIR /app/
+WORKDIR /app
 
 # Copy the binary from builder
 COPY --from=builder /app/terse .
