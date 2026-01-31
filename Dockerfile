@@ -15,7 +15,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -a -installsuffix cgo \
     -ldflags="-X main.version=$VERSION" \
-    -o /app/terse ./cmd/terse
+    -o /app/terse ./cmd/terse/*.go
 
 # Final stage
 FROM alpine:latest
