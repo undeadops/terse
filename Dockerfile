@@ -5,7 +5,7 @@ ARG VERSION=latest
 WORKDIR /app
 
 # Copy go mod files
-COPY go.mod go.sum ./
+COPY go.mod go.sum .
 RUN go mod download
 
 # Copy source code
@@ -15,7 +15,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -a -installsuffix cgo \
     -ldflags="-X main.version=$VERSION" \
-    -o /app/terse ./cmd/terse/*.go
+    -o /app/terse cmd/terse/*.go
 
 # Final stage
 FROM alpine:latest
