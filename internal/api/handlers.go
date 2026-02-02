@@ -26,14 +26,16 @@ var (
 )
 
 type UserHandler struct {
-	store  store.Store
-	logger zerolog.Logger
+	store        store.Store
+	redirectHost string
+	logger       zerolog.Logger
 }
 
-func Router(ctx context.Context, store store.Store, logger zerolog.Logger) *chi.Mux {
+func Router(ctx context.Context, store store.Store, redirectHost string, logger zerolog.Logger) *chi.Mux {
 	usr := &UserHandler{
-		store:  store,
-		logger: logger,
+		store:        store,
+		redirectHost: redirectHost,
+		logger:       logger,
 	}
 
 	r := chi.NewRouter()
@@ -145,6 +147,9 @@ func (h *UserHandler) CreateRedirect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shortURL := r.Host + "/g/" + key
+	if h.redirectHost != "" {
+		shortURL = h.redirectHost + "/g/" + key
+	}
 	response := &CreateShortURLResponse{ShortURL: shortURL}
 	h.respondJSON(w, r, http.StatusCreated, response)
 }

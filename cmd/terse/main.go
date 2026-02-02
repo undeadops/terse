@@ -21,12 +21,13 @@ const (
 )
 
 var (
-	port        string
-	region      string
-	table       string
-	ddbEndpoint string
-	debug       bool
-	version     string
+	port         string
+	region       string
+	table        string
+	ddbEndpoint  string
+	redirectHost string
+	debug        bool
+	version      string
 )
 
 func main() {
@@ -34,6 +35,7 @@ func main() {
 	flag.StringVar(&region, "region", getEnv("AWS_REGION", "us-east-1"), "AWS region")
 	flag.StringVar(&table, "table", getEnv("DYNAMODB_TABLE", "terse"), "DynamoDB table name")
 	flag.StringVar(&ddbEndpoint, "ddb-endpoint", getEnv("DYNAMODB_ENDPOINT", ""), "DynamoDB endpoint URL")
+	flag.StringVar(&redirectHost, "redirect-host", getEnv("REDIRECT_HOST", ""), "Redirect host")
 	flag.BoolVar(&debug, "debug", getEnvBool("DEBUG", false), "Enable debug mode")
 
 	// Parse flags
@@ -68,7 +70,7 @@ func main() {
 	}
 	//defer client.Close()
 
-	router := api.Router(ctx, client, logger)
+	router := api.Router(ctx, client, redirectHost, logger)
 
 	server := &http.Server{
 		Addr:    ":" + port,
