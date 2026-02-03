@@ -77,6 +77,7 @@ func (client *Client) Put(ctx context.Context, key string, value string) error {
 		RedirectURL: value,
 		AccessCount: 0,
 		CreatedAt:   time.Now().Unix(),
+		ExpireAt:    time.Now().Add(time.Duration(client.TTLDays) * 24 * time.Hour).Unix(),
 	}
 
 	// Marshal the item into DynamoDB attribute values

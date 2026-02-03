@@ -19,6 +19,7 @@ type Client struct {
 	Table       string
 	Region      string
 	DDBEndpoint string
+	TTLDays     int
 	DDB         *dynamodb.Client
 	Logger      *zerolog.Logger
 }
@@ -29,6 +30,7 @@ type URLItem struct {
 	RedirectURL string `dynamodbav:"redirect_url"` // The full URL to redirect to
 	AccessCount int64  `dynamodbav:"access_count"` // Number of times the URL has been accessed
 	CreatedAt   int64  `dynamodbav:"created_at"`   // Unix timestamp of creation
+	ExpireAt    int64  `dynamodbav:"expire_at"`    // Unix timestamp for TTL
 }
 
 func SetupDB(ctx context.Context, c *Client) error {
@@ -87,9 +89,27 @@ func SetupDB(ctx context.Context, c *Client) error {
 			},
 			BillingMode: types.BillingModePayPerRequest,
 		})
-
 		if err != nil {
 			return fmt.Errorf("failed to create table: %w", err)
+		}
+
+		_, err = c.DDB.UpdateTimeToLive(ctx, &dynamodb.UpdateTimeToLiveInput{
+			TableName: aws.String(c.Table),
+			TimeToLiveSpecification: &types.TimeToLiveSpecification{
+				AttributeName: aws.String("expire_at"),
+				Enabled:       aws.Bool(true),
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to enable TTL on table: %w", err)
+		}
+
+		// Wait until table is active
+		err = dynamodb.NewTableExistsWaiter(c.DDB).Wait(ctx, &dynamodb.DescribeTableInput{
+			TableName: aws.String(c.Table),
+		}, 0)
+		if err != nil {
+			return fmt.Errorf("failed to wait for table creation: %w", err)
 		}
 
 		if c.DebugMode {

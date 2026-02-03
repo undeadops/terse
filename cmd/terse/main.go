@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -26,6 +27,7 @@ var (
 	table        string
 	ddbEndpoint  string
 	redirectHost string
+	ttlDays      int
 	debug        bool
 	version      string
 )
@@ -36,6 +38,7 @@ func main() {
 	flag.StringVar(&table, "table", getEnv("DYNAMODB_TABLE", "terse"), "DynamoDB table name")
 	flag.StringVar(&ddbEndpoint, "ddb-endpoint", getEnv("DYNAMODB_ENDPOINT", ""), "DynamoDB endpoint URL")
 	flag.StringVar(&redirectHost, "redirect-host", getEnv("REDIRECT_HOST", ""), "Redirect host")
+	flag.IntVar(&ttlDays, "ttl-days", getEnvInt("TTL_DAYS", 30), "TTL in days for shortened URLs")
 	flag.BoolVar(&debug, "debug", getEnvBool("DEBUG", false), "Enable debug mode")
 
 	// Parse flags
@@ -60,6 +63,7 @@ func main() {
 		Region:      region,
 		Table:       table,
 		DDBEndpoint: ddbEndpoint,
+		TTLDays:     ttlDays,
 		DebugMode:   debug,
 		Logger:      &logger,
 	}
@@ -113,5 +117,16 @@ func getEnvBool(key string, defaultVal bool) bool {
 		return value == "true" || value == "1" || value == "yes"
 	}
 
+	return defaultVal
+}
+
+func getEnvInt(key string, defaultVal int) int {
+	if value, exists := os.LookupEnv(key); exists {
+		var intValue int
+		_, err := fmt.Sscanf(value, "%d", &intValue)
+		if err == nil {
+			return intValue
+		}
+	}
 	return defaultVal
 }
