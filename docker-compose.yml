@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=dummy1
+      - AWS_SECRET_ACCESS_KEY=dummy1
+      - DYNAMODB_ENDPOINT=http://dynamodb:8000
+    depends_on:
+      - dynamodb
+    networks:
+      - terse-network
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    volumes:
+      - dynamodb-data:/home/dynamodblocal/data
+    networks:
+      - terse-network
+
+networks:
+  terse-network:
+    driver: bridge
+
+volumes:
+  dynamodb-data:
